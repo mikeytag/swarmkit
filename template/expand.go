@@ -37,7 +37,28 @@ func ExpandContainerSpec(n *api.NodeDescription, t *api.Task) (*api.ContainerSpe
 	}
 
 	container.Hostname, err = ctx.Expand(container.Hostname)
+
 	return container, errors.Wrap(err, "expanding hostname failed")
+}
+
+// ExpandTaskSpec expands templated fields in the runtime using the task
+// state and the node where it is scheduled to run.
+// Templating is all evaluated on the agent-side, before execution.
+//
+// Note that these are projected only on runtime values, since active task
+// values are typically manipulated in the manager.
+func ExpandTaskSpec(n *api.NodeDescription, t *api.Task) (*api.TaskSpec, error) {
+	task = t.Copy()
+	ctx = NewContext(n, t)
+
+	var err error
+	task.Networks, err = expandNetworks(ctx, task.Networks)
+	if err != nil {
+		return task, errors.Wrap(err, "expanding networks failed")
+	}
+
+
+	return task, errors.Wrap(err, "expanding task failed")
 }
 
 func expandMounts(ctx Context, mounts []api.Mount) ([]api.Mount, error) {
@@ -78,22 +99,22 @@ func expandMounts(ctx Context, mounts []api.Mount) ([]api.Mount, error) {
 	return expanded, nil
 }
 
-func expandNetworkAttachments(ctx Context, attachments []api.NetworkAttachment) ([]api.NetworkAttachment, error) {
-	if len(attachments) == 0 {
-		return attachments, nil
+func expandNetworks(ctx Context, networks []api.NetworkAttachmentConfig) ([]api.NetworkAttachmentConfig, error) {
+	if len(networks) == 0 {
+		return networks, nil
 	}
 
-	expanded := make([]api.NetworkAttachment, len(attachments))
-	for i, attachment := range attachments {
+	expanded := make([]api.NetworkAttachmentConfig, len(networks))
+	for i, network := range networks {
 		var err error
-		for n, alias := range attachment.Aliases {
+		for n, alias := range network.Aliases {
 			alias, err = ctx.Expand(alias)
 			if (err != nil) {
-				return attachments, errors.Wrapf(err, "expanding network alias %q", alias)
+				return networks, errors.Wrapf(err, "expanding network alias %q", alias)
 			}
-			attachment.Aliases[n] = alias
+			network.Aliases[n] = alias
 		}
-		expanded[i].Aliases = attachment
+		expanded[i] = network
 	}
 
 	return expanded, nil
