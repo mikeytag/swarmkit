@@ -127,6 +127,37 @@ func TestTemplateContext(t *testing.T) {
 			},
 		},
 		{
+			Test: "NetworkAttachment",
+			Task: modifyTask(func(t *api.Task) {
+				t.Spec = api.TaskSpec{
+					Runtime: &api.TaskSpec_Container{
+						Container: &api.ContainerSpec{
+							NetworkAttachments: []api.NetworkAttachment{
+								{
+									Aliases: ["bar-{{.Node.ID}}-{{.Task.Name}}", "foo-{{.Service.ID}}-{{.Service.Name}}"],
+								},
+								{
+									Aliases: ["bar-{{.Node.ID}}-{{.Service.Name}}","foo-{{.Task.Slot}}-{{.Task.ID}}"],
+								},
+							},
+						},
+					},
+				}
+			}),
+			NodeDescription: modifyNode(func(n *api.NodeDescription) {
+			}),
+			Expected: &api.ContainerSpec{
+				NetworkAttachments: []api.NetworkAttachment{
+					{
+						Aliases: ["bar-nodeID-serviceName.10.taskID", "foo-serviceID-serviceName"],
+					},
+					{
+						Aliases: ["bar-nodeID-serviceName", "foo-10-taskID"],
+					},
+				},
+			},
+		},
+		{
 			Test: "Hostname",
 			Task: modifyTask(func(t *api.Task) {
 				t.Spec = api.TaskSpec{

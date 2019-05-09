@@ -78,6 +78,27 @@ func expandMounts(ctx Context, mounts []api.Mount) ([]api.Mount, error) {
 	return expanded, nil
 }
 
+func expandNetworkAttachments(ctx Context, attachments []api.NetworkAttachment) ([]api.NetworkAttachment, error) {
+	if len(attachments) == 0 {
+		return attachments, nil
+	}
+
+	expanded := make([]api.NetworkAttachment, len(attachments))
+	for i, attachment := range attachments {
+		var err error
+		for n, alias := range attachment.Aliases {
+			alias, err = ctx.Expand(alias)
+			if (err != nil) {
+				return attachments, errors.Wrapf(err, "expanding network alias %q", alias)
+			}
+			attachment.Aliases[n] = alias
+		}
+		expanded[i].Aliases = attachment
+	}
+
+	return expanded, nil
+}
+
 func expandMap(ctx Context, m map[string]string) (map[string]string, error) {
 	var (
 		n   = make(map[string]string, len(m))
