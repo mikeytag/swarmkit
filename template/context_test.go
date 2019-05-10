@@ -135,6 +135,7 @@ func TestTemplateContext(t *testing.T) {
 							Aliases: []string{
 								"bar-{{.Node.ID}}-{{.Task.Name}}",
 								"foo-{{.Service.ID}}-{{.Service.Name}}",
+								"myhost-{{.Task.Slot}}",
 							},
 						},
 					},
@@ -146,6 +147,7 @@ func TestTemplateContext(t *testing.T) {
 				Aliases: []string{
 					"bar-nodeID-serviceName.10.taskID",
 					"foo-serviceID-serviceName",
+					"myhost-10",
 				},
 			},
 		},
