@@ -38,28 +38,16 @@ func ExpandContainerSpec(n *api.NodeDescription, t *api.Task) (*api.ContainerSpe
 
 	container.Hostname, err = ctx.Expand(container.Hostname)
 
+	var expandedAliases []string
+	for _, alias := range container.Aliases {
+		expanded, _ := ctx.Expand(alias)
+		expandedAliases = append(expandedAliases, expanded)
+	}
+	container.Aliases = expandedAliases
+
 	return container, errors.Wrap(err, "expanding hostname failed")
 }
 
-// ExpandTaskSpec expands templated fields in the runtime using the task
-// state and the node where it is scheduled to run.
-// Templating is all evaluated on the agent-side, before execution.
-//
-// Note that these are projected only on runtime values, since active task
-// values are typically manipulated in the manager.
-func ExpandTaskSpec(n *api.NodeDescription, t *api.Task) (*api.TaskSpec, error) {
-	task = t.Copy()
-	ctx = NewContext(n, t)
-
-	var err error
-	task.Networks, err = expandNetworks(ctx, task.Networks)
-	if err != nil {
-		return task, errors.Wrap(err, "expanding networks failed")
-	}
-
-
-	return task, errors.Wrap(err, "expanding task failed")
-}
 
 func expandMounts(ctx Context, mounts []api.Mount) ([]api.Mount, error) {
 	if len(mounts) == 0 {

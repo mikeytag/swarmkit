@@ -127,24 +127,14 @@ func TestTemplateContext(t *testing.T) {
 			},
 		},
 		{
-			Test: "Network",
+			Test: "ContainerAlias",
 			Task: modifyTask(func(t *api.Task) {
 				t.Spec = api.TaskSpec{
 					Runtime: &api.TaskSpec_Container{
 						Container: &api.ContainerSpec{
-							Networks: []api.NetworkAttachmentConfig{
-								{
-									Aliases: []string{
-										"bar-{{.Node.ID}}-{{.Task.Name}}",
-										"foo-{{.Service.ID}}-{{.Service.Name}}",
-									},
-								},
-								{
-									Aliases: []string{
-										"bar-{{.Node.ID}}-{{.Service.Name}}",
-										"foo-{{.Task.Slot}}-{{.Task.ID}}",
-									},
-								},
+							Aliases: []string{
+								"bar-{{.Node.ID}}-{{.Task.Name}}",
+								"foo-{{.Service.ID}}-{{.Service.Name}}",
 							},
 						},
 					},
@@ -153,19 +143,9 @@ func TestTemplateContext(t *testing.T) {
 			NodeDescription: modifyNode(func(n *api.NodeDescription) {
 			}),
 			Expected: &api.ContainerSpec{
-				Networks: []api.NetworkAttachmentConfig{
-					{
-						Aliases: []string{
-							"bar-nodeID-serviceName.10.taskID",
-							"foo-serviceID-serviceName",
-						},
-					},
-					{
-						Aliases: []string{
-							"bar-nodeID-serviceName",
-							"foo-10-taskID",
-						},
-					},
+				Aliases: []string{
+					"bar-nodeID-serviceName.10.taskID",
+					"foo-serviceID-serviceName",
 				},
 			},
 		},
